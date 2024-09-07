@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List, Dict, Optional, Any
 
+
 class BaseAdapter(ABC):
     """
     Abstract base class for all database adapters.
@@ -20,13 +21,13 @@ class BaseAdapter(ABC):
     :type port: int, optional
     """
 
-    def __init__(self, 
+    def __init__(self,
                  host: str,
-                 user: str, 
-                 password: str, 
-                 database: str, 
+                 user: str,
+                 password: str,
+                 database: str,
                  port: Optional[int] = None
-                ) -> None:
+                 ) -> None:
         """
         Initialize the base adapter with the database connection parameters.
 
@@ -162,6 +163,8 @@ class BaseAdapter(ABC):
 
         This should be called after a successful save/update/delete operation.
         """
+        if not self.connection:
+            raise RuntimeError("No active connection to commit the transaction.")
         if self._transaction_active:
             try:
                 self.connection.commit()
@@ -179,6 +182,8 @@ class BaseAdapter(ABC):
 
         This should be called when an error occurs during a transaction.
         """
+        if not self.connection:
+            raise RuntimeError("No active connection to roll back the transaction.")
         if self._transaction_active:
             try:
                 self.connection.rollback()
@@ -200,6 +205,9 @@ class BaseAdapter(ABC):
         :return: The query result, usually a list of dictionaries.
         :rtype: list of dict or None
         """
+        self.ensure_connection()
+        if not self.connection:
+            raise RuntimeError("No active connection to execute the query.")
         try:
             self.ensure_connection()
             with self.connection.cursor() as cursor:
